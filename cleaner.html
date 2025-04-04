@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>URL Cleanser</title>
+  <style>
+    body { font-family: sans-serif; padding: 2em; }
+    input, button, textarea { width: 100%; margin-top: 1em; padding: 0.5em; font-size: 1em; }
+  </style>
+</head>
+<body>
+  <h2>Affiliate URL Cleanser</h2>
+  <p>Paste your Flipkart or Amazon URL below to remove affiliate tracking.</p>
+  <input type="text" id="urlInput" placeholder="Paste affiliate URL here">
+  <button onclick="cleanURL()">Clean URL</button>
+  <textarea id="result" rows="4" placeholder="Cleansed URL will appear here" readonly></textarea>
+
+  <script>
+    function cleanURL() {
+      const input = document.getElementById("urlInput").value;
+      try {
+        const url = new URL(input);
+        // Remove Amazon affiliate tags
+        if (url.hostname.includes("amazon.")) {
+          url.searchParams.delete("tag");
+          url.searchParams.delete("ascsubtag");
+          url.searchParams.delete("ref");
+        }
+
+        // Remove Flipkart affiliate tags
+        if (url.hostname.includes("flipkart.")) {
+          url.searchParams.delete("affid");
+          url.searchParams.delete("affExtParam1");
+          url.searchParams.delete("affExtParam2");
+          url.searchParams.delete("affExtParam");
+        }
+
+        document.getElementById("result").value = url.origin + url.pathname + (url.search ? "?" + url.searchParams.toString() : "");
+      } catch (e) {
+        document.getElementById("result").value = "Invalid URL!";
+      }
+    }
+  </script>
+</body>
+</html>
