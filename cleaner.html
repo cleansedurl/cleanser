@@ -4,30 +4,51 @@
   <meta charset="UTF-8">
   <title>URL Cleanser</title>
   <style>
-    body { font-family: sans-serif; padding: 2em; }
+    body { font-family: sans-serif; padding: 2em; max-width: 600px; margin: auto; }
     input, button, textarea { width: 100%; margin-top: 1em; padding: 0.5em; font-size: 1em; }
   </style>
 </head>
 <body>
   <h2>Affiliate URL Cleanser</h2>
-  <p>Paste your Flipkart or Amazon URL below to remove affiliate tracking.</p>
-  <input type="text" id="urlInput" placeholder="Paste affiliate URL here">
-  <button onclick="cleanURL()">Clean URL</button>
+  <p>Paste your Flipkart or Amazon URL below to remove affiliate tracking (supports short URLs like amzn.to).</p>
+
+  <input type="text" id="urlInput" placeholder="Paste affiliate or short URL here">
+  <button onclick="handleURL()">Clean URL</button>
   <textarea id="result" rows="4" placeholder="Cleansed URL will appear here" readonly></textarea>
 
   <script>
-    function cleanURL() {
-      const input = document.getElementById("urlInput").value;
+    async function handleURL() {
+      const input = document.getElementById("urlInput").value.trim();
+      const resultBox = document.getElementById("result");
+      resultBox.value = "Processing...";
+
       try {
-        const url = new URL(input);
-        // Remove Amazon affiliate tags
+        let finalURL = input;
+
+        // If it's a short URL (like amzn.to), fetch to expand it
+        if (input.includes("amzn.to") || input.includes("bit.ly") || input.includes("tinyurl")) {
+          finalURL = await expandShortURL(input);
+        }
+
+        const cleansed = cleanseURL(finalURL);
+        resultBox.value = cleansed;
+      } catch (err) {
+        resultBox.value = "Error: " + err.message;
+      }
+    }
+
+    function cleanseURL(urlStr) {
+      try {
+        const url = new URL(urlStr);
+
+        // Clean Amazon
         if (url.hostname.includes("amazon.")) {
           url.searchParams.delete("tag");
           url.searchParams.delete("ascsubtag");
           url.searchParams.delete("ref");
         }
 
-        // Remove Flipkart affiliate tags
+        // Clean Flipkart
         if (url.hostname.includes("flipkart.")) {
           url.searchParams.delete("affid");
           url.searchParams.delete("affExtParam1");
@@ -35,10 +56,23 @@
           url.searchParams.delete("affExtParam");
         }
 
-        document.getElementById("result").value = url.origin + url.pathname + (url.search ? "?" + url.searchParams.toString() : "");
-      } catch (e) {
-        document.getElementById("result").value = "Invalid URL!";
+        return url.origin + url.pathname + (url.search ? "?" + url.searchParams.toString() : "");
+      } catch {
+        return "Invalid URL!";
       }
+    }
+
+    async function expandShortURL(shortURL) {
+      const response = await fetch(shortURL, {
+        method: 'HEAD',
+        redirect: 'follow'
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to expand shortened URL");
+      }
+
+      return response.url;
     }
   </script>
 </body>
