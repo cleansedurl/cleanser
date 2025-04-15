@@ -2,78 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>URL Cleanser</title>
+  <title>Affiliate URL Cleaner + Tagger</title>
   <style>
     body { font-family: sans-serif; padding: 2em; max-width: 600px; margin: auto; }
     input, button, textarea { width: 100%; margin-top: 1em; padding: 0.5em; font-size: 1em; }
   </style>
 </head>
 <body>
-  <h2>Affiliate URL Cleanser</h2>
-  <p>Paste your Flipkart or Amazon URL below to remove affiliate tracking (supports short URLs like amzn.to).</p>
+  <h2>Affiliate URL Cleaner + Tagger</h2>
+  <p>Paste your Flipkart or Amazon URL below. It will remove existing affiliate tags and add your own (Amazon tag: <strong>ptradingin-21</strong>).</p>
 
-  <input type="text" id="urlInput" placeholder="Paste affiliate or short URL here">
-  <button onclick="handleURL()">Clean URL</button>
-  <textarea id="result" rows="4" placeholder="Cleansed URL will appear here" readonly></textarea>
+  <input type="text" id="urlInput" placeholder="Paste URL here">
+  <button onclick="handleURL()">Clean & Add My Tag</button>
+  <textarea id="result" rows="4" placeholder="Result URL will appear here" readonly></textarea>
 
   <script>
-    async function handleURL() {
-      const input = document.getElementById("urlInput").value.trim();
-      const resultBox = document.getElementById("result");
-      resultBox.value = "Processing...";
-
-      try {
-        let finalURL = input;
-
-        // If it's a short URL (like amzn.to), fetch to expand it
-        if (input.includes("amzn.to") || input.includes("bit.ly") || input.includes("tinyurl")) {
-          finalURL = await expandShortURL(input);
-        }
-
-        const cleansed = cleanseURL(finalURL);
-        resultBox.value = cleansed;
-      } catch (err) {
-        resultBox.value = "Error: " + err.message;
-      }
-    }
-
-    function cleanseURL(urlStr) {
+    function cleanseAndAddTag(urlStr) {
       try {
         const url = new URL(urlStr);
 
-        // Clean Amazon
+        // Amazon URL cleanup and tagging
         if (url.hostname.includes("amazon.")) {
           url.searchParams.delete("tag");
           url.searchParams.delete("ascsubtag");
           url.searchParams.delete("ref");
+
+          // Add your tag
+          url.searchParams.set("tag", "ptradingin-21");
         }
 
-        // Clean Flipkart
-        if (url.hostname.includes("flipkart.")) {
-          url.searchParams.delete("affid");
-          url.searchParams.delete("affExtParam1");
-          url.searchParams.delete("affExtParam2");
-          url.searchParams.delete("affExtParam");
-        }
-
-        return url.origin + url.pathname + (url.search ? "?" + url.searchParams.toString() : "");
-      } catch {
-        return "Invalid URL!";
-      }
-    }
-
-    async function expandShortURL(shortURL) {
-      const response = await fetch(shortURL, {
-        method: 'HEAD',
-        redirect: 'follow'
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to expand shortened URL");
-      }
-
-      return response.url;
-    }
-  </script>
-</body>
-</html>
+        // Flipkart cleanup
