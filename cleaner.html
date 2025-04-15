@@ -6,15 +6,23 @@
   <style>
     body { font-family: sans-serif; padding: 2em; max-width: 600px; margin: auto; }
     input, button, textarea { width: 100%; margin-top: 1em; padding: 0.5em; font-size: 1em; }
+    button.small { width: 48%; display: inline-block; }
+    .copy-success { color: green; margin-top: 0.5em; }
   </style>
 </head>
 <body>
   <h2>Affiliate URL Cleaner + Tagger</h2>
-  <p>Paste any Amazon or Flipkart URL below. It will remove all existing affiliate tags and always add your Amazon tag: <strong>ptradingin-21</strong></p>
+  <p>Paste any Amazon or Flipkart URL. It'll remove existing affiliate tags and always add your Amazon tag: <strong>ptradingin-21</strong>.</p>
+
+  <button class="small" onclick="pasteFromClipboard()">📋 Paste</button>
+  <button class="small" onclick="handleURL()">🧼 Clean & Add Tag</button>
 
   <input type="text" id="urlInput" placeholder="Paste URL here">
-  <button onclick="handleURL()">Clean & Add My Tag</button>
+
   <textarea id="result" rows="4" placeholder="Result URL will appear here" readonly></textarea>
+
+  <button onclick="copyToClipboard()">✅ Copy Result</button>
+  <div id="copyMessage" class="copy-success"></div>
 
   <script>
     function cleanseAndAddTag(urlStr) {
@@ -22,24 +30,20 @@
         const url = new URL(urlStr);
 
         if (url.hostname.includes("amazon.")) {
-          // Clean existing tags
           url.searchParams.delete("tag");
           url.searchParams.delete("ascsubtag");
           url.searchParams.delete("ref");
-
-          // ✅ Always add your tag
           url.searchParams.set("tag", "ptradingin-21");
         }
 
         if (url.hostname.includes("flipkart.")) {
-          // Clean Flipkart affiliate tags
           url.searchParams.delete("affid");
           url.searchParams.delete("affExtParam1");
           url.searchParams.delete("affExtParam2");
           url.searchParams.delete("affExtParam");
 
-          // 🔄 Optional: Add your Flipkart tag if you have one
-          // url.searchParams.set("affid", "yourFlipkartAffiliateID");
+          // Optional: add Flipkart tag here
+          // url.searchParams.set("affid", "yourFlipkartTag");
         }
 
         return url.origin + url.pathname + (url.search ? "?" + url.searchParams.toString() : "");
@@ -51,6 +55,8 @@
     function handleURL() {
       const input = document.getElementById("urlInput").value.trim();
       const resultBox = document.getElementById("result");
+      const messageBox = document.getElementById("copyMessage");
+      messageBox.innerText = "";
 
       if (!input) {
         resultBox.value = "Please enter a URL.";
@@ -59,6 +65,30 @@
 
       const result = cleanseAndAddTag(input);
       resultBox.value = result;
+    }
+
+    async function pasteFromClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        document.getElementById("urlInput").value = text;
+      } catch (err) {
+        alert("Clipboard access denied.");
+      }
+    }
+
+    function copyToClipboard() {
+      const resultText = document.getElementById("result").value;
+      const messageBox = document.getElementById("copyMessage");
+
+      if (!resultText) {
+        messageBox.innerText = "Nothing to copy!";
+        return;
+      }
+
+      navigator.clipboard.writeText(resultText).then(() => {
+        messageBox.innerText = "Copied to clipboard!";
+        setTimeout(() => { messageBox.innerText = ""; }, 2000);
+      });
     }
   </script>
 </body>
