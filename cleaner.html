@@ -10,7 +10,7 @@
 </head>
 <body>
   <h2>Affiliate URL Cleaner + Tagger</h2>
-  <p>Paste your Flipkart or Amazon URL below. It will remove existing affiliate tags and add your own (Amazon tag: <strong>ptradingin-21</strong>).</p>
+  <p>Paste any Amazon or Flipkart URL below. It will remove all existing affiliate tags and always add your Amazon tag: <strong>ptradingin-21</strong></p>
 
   <input type="text" id="urlInput" placeholder="Paste URL here">
   <button onclick="handleURL()">Clean & Add My Tag</button>
@@ -21,14 +21,45 @@
       try {
         const url = new URL(urlStr);
 
-        // Amazon URL cleanup and tagging
         if (url.hostname.includes("amazon.")) {
+          // Clean existing tags
           url.searchParams.delete("tag");
           url.searchParams.delete("ascsubtag");
           url.searchParams.delete("ref");
 
-          // Add your tag
+          // ✅ Always add your tag
           url.searchParams.set("tag", "ptradingin-21");
         }
 
-        // Flipkart cleanup
+        if (url.hostname.includes("flipkart.")) {
+          // Clean Flipkart affiliate tags
+          url.searchParams.delete("affid");
+          url.searchParams.delete("affExtParam1");
+          url.searchParams.delete("affExtParam2");
+          url.searchParams.delete("affExtParam");
+
+          // 🔄 Optional: Add your Flipkart tag if you have one
+          // url.searchParams.set("affid", "yourFlipkartAffiliateID");
+        }
+
+        return url.origin + url.pathname + (url.search ? "?" + url.searchParams.toString() : "");
+      } catch {
+        return "Invalid URL!";
+      }
+    }
+
+    function handleURL() {
+      const input = document.getElementById("urlInput").value.trim();
+      const resultBox = document.getElementById("result");
+
+      if (!input) {
+        resultBox.value = "Please enter a URL.";
+        return;
+      }
+
+      const result = cleanseAndAddTag(input);
+      resultBox.value = result;
+    }
+  </script>
+</body>
+</html>
